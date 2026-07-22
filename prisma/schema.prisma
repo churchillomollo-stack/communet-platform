@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+
+  PASSENGER
+
+  OPERATOR_ADMIN
+  OPERATOR_STAFF
+
+  DRIVER
+  CONDUCTOR
+
+  POLICE_OFFICER
+  TRAFFIC_OFFICER
+
+  EMERGENCY_DISPATCHER
+  AMBULANCE_RESPONDER
+  FIRE_RESPONDER
+
+  INSURANCE_OFFICER
+
+  SYSTEM_AUDITOR
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+model User {
+  id           String  @id @default(cuid())
+  fullName     String
+  phone        String  @unique
+  email        String? @unique
+  passwordHash String
+  nationalId   String? @unique
+
+  role   UserRole   @default(PASSENGER)
+  status UserStatus @default(PENDING_VERIFICATION)
+
+  lastLoginAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+
+  @@index([phone])
+  @@index([email])
+  @@index([role])
+}
+
+model RefreshToken {
+  id String @id @default(cuid())
+
+  token String @unique
+
+  expiresAt DateTime
+
+  revoked Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id String @id @default(cuid())
+
+  action String
+
+  entity String
+
+  entityId String?
+
+  description String?
+
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+}
